@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8000";
+const API_URL = "";
 
 let appliances = [];
 // Chart variables
@@ -23,7 +23,7 @@ const APPLIANCE_WATTS = {
 
 // Colors for Pie chart
 const industrialColors = [
-    '#4f6bff', '#5b73e8', '#6a82fb', '#485582', '#6b7280', 
+    '#4f6bff', '#5b73e8', '#6a82fb', '#485582', '#6b7280',
     '#9aa4b2', '#374151', '#1f2937', '#2a2f38', '#4b5563'
 ];
 
@@ -63,7 +63,7 @@ appSelect.addEventListener("change", (e) => {
 function initCharts() {
     Chart.defaults.color = '#9aa4b2';
     Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
-    
+
     // 1. Comparison Chart (Base vs Adjusted)
     const ctxComp = document.getElementById('comparisonChart').getContext('2d');
     comparisonChart = new Chart(ctxComp, {
@@ -103,8 +103,8 @@ function initCharts() {
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: { 
-                legend: { position: 'right', labels: { color: '#9aa4b2', boxWidth: 12 } } 
+            plugins: {
+                legend: { position: 'right', labels: { color: '#9aa4b2', boxWidth: 12 } }
             }
         }
     });
@@ -167,8 +167,8 @@ function initCharts() {
                 y: { beginAtZero: true, grid: { color: '#2a2f38' } },
                 x: { grid: { color: '#2a2f38' } }
             },
-            plugins: { 
-                legend: { position: 'top', labels: { color: '#9aa4b2', boxWidth: 12 } } 
+            plugins: {
+                legend: { position: 'top', labels: { color: '#9aa4b2', boxWidth: 12 } }
             }
         }
     });
@@ -190,12 +190,12 @@ function updateList() {
         `;
         appList.appendChild(li);
     });
-    
+
     // Update local usage chart immediately based on active appliances
     if (usageChart && appliancePieChart) {
         const labels = appliances.map(a => a.name);
         const data = appliances.map(a => (a.wattage * a.hours * a.quantity * 30) / 1000);
-        
+
         usageChart.data.labels = labels;
         usageChart.data.datasets[0].data = data;
         usageChart.update();
@@ -208,12 +208,12 @@ function updateList() {
 
 form.addEventListener("submit", (e) => {
     e.preventDefault();
-    
+
     let finalName = appSelect.value;
     if (finalName === "Custom") {
         finalName = appNameCustom.value.trim();
     }
-    
+
     if (!finalName) {
         alert("Please provide an appliance name.");
         return;
@@ -225,9 +225,9 @@ form.addEventListener("submit", (e) => {
         hours: parseFloat(hoursInput.value),
         quantity: parseInt(qtyInput.value)
     });
-    
+
     updateList();
-    
+
     form.reset();
     customNameContainer.style.display = "none";
     appNameCustom.required = false;
@@ -257,9 +257,9 @@ calcBtn.addEventListener("click", async () => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ appliances, hour_of_day: hourOfDay, month: month })
         });
-        
+
         const data = await res.json();
-        
+
         resBase.innerHTML = `${data.base_units.toFixed(2)} <span class="unit">kWh</span>`;
         resAdjusted.innerHTML = `${data.adjusted_units.toFixed(2)} <span class="unit">kWh</span>`;
         resBill.innerText = `$${data.estimated_bill.toFixed(2)}`;
@@ -275,14 +275,14 @@ calcBtn.addEventListener("click", async () => {
         if (trendChart) {
             const baseMonthAvg = data.base_units;
             const varianceRatio = data.adjusted_units / (data.base_units || 1);
-            
+
             const simulatedBase = Array(12).fill(0).map((_, i) => {
-                const seasonFactor = 1 + (0.2 * Math.sin((i / 11) * Math.PI * 2)); 
+                const seasonFactor = 1 + (0.2 * Math.sin((i / 11) * Math.PI * 2));
                 return baseMonthAvg * seasonFactor;
             });
-            
+
             const simulatedAdj = simulatedBase.map(b => b * varianceRatio);
-            
+
             trendChart.data.datasets[0].data = simulatedBase;
             trendChart.data.datasets[1].data = simulatedAdj;
             trendChart.update();
@@ -294,7 +294,7 @@ calcBtn.addEventListener("click", async () => {
             body: JSON.stringify({ appliances })
         });
         const tipData = await tipRes.json();
-        
+
         tipsList.innerHTML = "";
         if (tipData.tips && tipData.tips.length > 0) {
             tipData.tips.forEach(t => {
