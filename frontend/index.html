@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WattWise AI – Smart Energy Planner</title>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts - Inter for industrial look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1><i class="fa-solid fa-bolt-lightning text-accent"></i> WattWise AI</h1>
+            <p>Smart Energy Planner</p>
+        </header>
+
+        <main class="dashboard">
+            <!-- Left Column: Input -->
+            <section class="panel input-panel">
+                <h2><i class="fa-solid fa-plug"></i> Appliances</h2>
+                <form id="appliance-form">
+                    <div class="input-group">
+                        <label for="app-select">Appliance Type</label>
+                        <select id="app-select" required>
+                            <option value="" disabled selected>Select an appliance...</option>
+                            <option value="Fan">Fan (75W)</option>
+                            <option value="LED Bulb">LED Bulb (10W)</option>
+                            <option value="Tube Light">Tube Light (40W)</option>
+                            <option value="TV">TV (120W)</option>
+                            <option value="Refrigerator">Refrigerator (150W)</option>
+                            <option value="Washing Machine">Washing Machine (500W)</option>
+                            <option value="Air Conditioner (1.5 Ton)">Air Conditioner [1.5 Ton] (1500W)</option>
+                            <option value="Laptop">Laptop (65W)</option>
+                            <option value="Water Heater">Water Heater (2000W)</option>
+                            <option value="Mixer Grinder">Mixer Grinder (750W)</option>
+                            <option value="Iron Box">Iron Box (1000W)</option>
+                            <option value="Custom">Custom Appliance...</option>
+                        </select>
+                    </div>
+                    
+                    <div class="input-group custom-name-group" id="custom-name-container" style="display: none;">
+                        <label for="app-name-custom">Custom Name</label>
+                        <input type="text" id="app-name-custom" placeholder="e.g. Server">
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="app-wattage">Watts</label>
+                            <input type="number" id="app-wattage" placeholder="Watts" required min="1">
+                        </div>
+                        <div class="input-group">
+                            <label for="app-hours">Hrs/Day</label>
+                            <input type="number" id="app-hours" placeholder="Hrs/Day" required min="0.1" step="0.1" max="24">
+                        </div>
+                        <div class="input-group">
+                            <label for="app-quantity">Qty</label>
+                            <input type="number" id="app-quantity" placeholder="Qty" required min="1" value="1">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary"><i class="fa-solid fa-plus"></i> Add Appliance</button>
+                </form>
+
+                <div class="appliance-list-container">
+                    <ul id="appliance-list"></ul>
+                </div>
+
+                <div class="calculation-controls">
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label for="calc-month">Month</label>
+                            <select id="calc-month">
+                                <option value="1">January</option>
+                                <option value="2">February</option>
+                                <option value="3">March</option>
+                                <option value="4">April</option>
+                                <option value="5">May</option>
+                                <option value="6">June</option>
+                                <option value="7" selected>July</option>
+                                <option value="8">August</option>
+                                <option value="9">September</option>
+                                <option value="10">October</option>
+                                <option value="11">November</option>
+                                <option value="12">December</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="calc-hour">Hour (0-23)</label>
+                            <input type="number" id="calc-hour" placeholder="e.g. 18" value="18" min="0" max="23">
+                        </div>
+                    </div>
+                    <button id="calculate-btn" class="btn-accent"><i class="fa-solid fa-calculator"></i> Run Estimation</button>
+                </div>
+            </section>
+
+            <!-- Right Column: Results -->
+            <section class="panel results-panel">
+                <div class="cards-grid">
+                    <div class="result-card">
+                        <div class="icon-wrap"><i class="fa-solid fa-plug-circle-bolt"></i></div>
+                        <div class="card-content">
+                            <h3>Base Units</h3>
+                            <p id="res-base">0.00 <span class="unit">kWh</span></p>
+                            <small>Deterministic</small>
+                        </div>
+                    </div>
+                    
+                    <div class="result-card accent-card">
+                        <div class="icon-wrap text-accent"><i class="fa-solid fa-microchip"></i></div>
+                        <div class="card-content">
+                            <h3 class="text-accent">Model Adjusted</h3>
+                            <p id="res-adjusted" class="text-accent">0.00 <span class="unit">kWh</span></p>
+                            <small class="text-accent">XGBoost Prediction</small>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="icon-wrap"><i class="fa-solid fa-file-invoice-dollar"></i></div>
+                        <div class="card-content">
+                            <h3>Est. Bill</h3>
+                            <p id="res-bill">$0.00</p>
+                            <small>Monthly</small>
+                        </div>
+                    </div>
+
+                    <div class="result-card">
+                        <div class="icon-wrap"><i class="fa-solid fa-leaf"></i></div>
+                        <div class="card-content">
+                            <h3>CO₂ Footprint</h3>
+                            <p id="res-co2">0.00 <span class="unit">kg</span></p>
+                            <small>Impact</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="usageChart"></canvas>
+                </div>
+
+                <div class="tips-container">
+                    <h2><i class="fa-solid fa-lightbulb"></i> AI Energy Tips</h2>
+                    <ul id="tips-list">
+                        <li class="empty-state">Add appliances and run estimation to see model-generated tips.</li>
+                    </ul>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
