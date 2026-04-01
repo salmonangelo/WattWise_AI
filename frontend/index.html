@@ -137,8 +137,28 @@
                     </div>
                 </div>
 
-                <div class="chart-container">
-                    <canvas id="usageChart"></canvas>
+                <div class="charts-grid">
+                    <div class="chart-box">
+                        <h4>Base vs Model</h4>
+                        <div class="canvas-wrapper"><canvas id="comparisonChart"></canvas></div>
+                    </div>
+                    <div class="chart-box">
+                        <h4>Appliance Contribution</h4>
+                        <div class="canvas-wrapper"><canvas id="appliancePieChart"></canvas></div>
+                    </div>
+                    <div class="chart-box full-width">
+                        <h4>Appliance Consumption</h4>
+                        <div class="canvas-wrapper"><canvas id="usageChart"></canvas></div>
+                    </div>
+                    <div class="chart-box full-width">
+                        <h4>Simulated Trend (Based on Model Patterns)</h4>
+                        <div class="canvas-wrapper"><canvas id="trendChart"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="model-strength-indicator">
+                    <i class="fa-solid fa-microchip"></i> Model Strength Indicator (R² Score): <strong>0.0832</strong><br>
+                    <small>Measures historical variance predictability—not generic consumption mapping.</small>
                 </div>
 
                 <div class="tips-container">

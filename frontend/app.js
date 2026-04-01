@@ -1,7 +1,11 @@
 const API_URL = "http://localhost:8000";
 
 let appliances = [];
-let chartInstance = null;
+// Chart variables
+let comparisonChart = null;
+let appliancePieChart = null;
+let usageChart = null;
+let trendChart = null;
 
 const APPLIANCE_WATTS = {
     "Fan": 75,
@@ -16,6 +20,12 @@ const APPLIANCE_WATTS = {
     "Mixer Grinder": 750,
     "Iron Box": 1000
 };
+
+// Colors for Pie chart
+const industrialColors = [
+    '#4f6bff', '#5b73e8', '#6a82fb', '#485582', '#6b7280', 
+    '#9aa4b2', '#374151', '#1f2937', '#2a2f38', '#4b5563'
+];
 
 // DOM Elements
 const form = document.getElementById("appliance-form");
@@ -50,21 +60,19 @@ appSelect.addEventListener("change", (e) => {
     }
 });
 
-function initChart() {
-    const ctx = document.getElementById('usageChart').getContext('2d');
-    Chart.defaults.color = '#9aa4b2'; // text-secondary
+function initCharts() {
+    Chart.defaults.color = '#9aa4b2';
     Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
     
-    chartInstance = new Chart(ctx, {
+    // 1. Comparison Chart (Base vs Adjusted)
+    const ctxComp = document.getElementById('comparisonChart').getContext('2d');
+    comparisonChart = new Chart(ctxComp, {
         type: 'bar',
         data: {
-            labels: [],
+            labels: ['Base Units', 'Model Adjusted'],
             datasets: [{
-                label: 'Monthly Usage (kWh)',
-                data: [],
-                backgroundColor: '#4f6bff',
-                borderColor: '#4f6bff',
-                borderWidth: 1,
+                data: [0, 0],
+                backgroundColor: ['#2a2f38', '#4f6bff'],
                 borderRadius: 2
             }]
         },
@@ -72,15 +80,96 @@ function initChart() {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-                y: { 
-                    beginAtZero: true, 
-                    grid: { color: '#2a2f38' } // border-color
-                },
-                x: { 
-                    grid: { display: false } 
-                }
+                y: { beginAtZero: true, grid: { color: '#2a2f38' } },
+                x: { grid: { display: false } }
             },
             plugins: { legend: { display: false } }
+        }
+    });
+
+    // 2. Appliance Contribution Pie Chart
+    const ctxPie = document.getElementById('appliancePieChart').getContext('2d');
+    appliancePieChart = new Chart(ctxPie, {
+        type: 'doughnut',
+        data: {
+            labels: [],
+            datasets: [{
+                data: [],
+                backgroundColor: industrialColors,
+                borderWidth: 1,
+                borderColor: '#16191f'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { 
+                legend: { position: 'right', labels: { color: '#9aa4b2', boxWidth: 12 } } 
+            }
+        }
+    });
+
+    // 3. Overall Appliance Usage Bar Chart
+    const ctxUsage = document.getElementById('usageChart').getContext('2d');
+    usageChart = new Chart(ctxUsage, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Monthly Usage (kWh)',
+                data: [],
+                backgroundColor: '#4f6bff',
+                borderRadius: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#2a2f38' } },
+                x: { grid: { display: false } }
+            },
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    // 4. Trend Chart (Simulated)
+    const ctxTrend = document.getElementById('trendChart').getContext('2d');
+    trendChart = new Chart(ctxTrend, {
+        type: 'line',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            datasets: [
+                {
+                    label: 'Base Load',
+                    data: Array(12).fill(0),
+                    borderColor: '#4b5563',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    pointRadius: 0,
+                    tension: 0.4
+                },
+                {
+                    label: 'Adjusted AI Trend',
+                    data: Array(12).fill(0),
+                    borderColor: '#4f6bff',
+                    backgroundColor: 'rgba(79, 107, 255, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, grid: { color: '#2a2f38' } },
+                x: { grid: { color: '#2a2f38' } }
+            },
+            plugins: { 
+                legend: { position: 'top', labels: { color: '#9aa4b2', boxWidth: 12 } } 
+            }
         }
     });
 }
@@ -101,14 +190,20 @@ function updateList() {
         `;
         appList.appendChild(li);
     });
-    updateChart();
-}
+    
+    // Update local usage chart immediately based on active appliances
+    if (usageChart && appliancePieChart) {
+        const labels = appliances.map(a => a.name);
+        const data = appliances.map(a => (a.wattage * a.hours * a.quantity * 30) / 1000);
+        
+        usageChart.data.labels = labels;
+        usageChart.data.datasets[0].data = data;
+        usageChart.update();
 
-function updateChart() {
-    if (!chartInstance) return;
-    chartInstance.data.labels = appliances.map(a => a.name);
-    chartInstance.data.datasets[0].data = appliances.map(a => (a.wattage * a.hours * a.quantity * 30) / 1000);
-    chartInstance.update();
+        appliancePieChart.data.labels = labels;
+        appliancePieChart.data.datasets[0].data = data;
+        appliancePieChart.update();
+    }
 }
 
 form.addEventListener("submit", (e) => {
@@ -133,7 +228,6 @@ form.addEventListener("submit", (e) => {
     
     updateList();
     
-    // Reset inputs
     form.reset();
     customNameContainer.style.display = "none";
     appNameCustom.required = false;
@@ -171,6 +265,29 @@ calcBtn.addEventListener("click", async () => {
         resBill.innerText = `$${data.estimated_bill.toFixed(2)}`;
         resCo2.innerHTML = `${data.co2_emissions.toFixed(2)} <span class="unit">kg</span>`;
 
+        // Update Comparison Chart
+        if (comparisonChart) {
+            comparisonChart.data.datasets[0].data = [data.base_units, data.adjusted_units];
+            comparisonChart.update();
+        }
+
+        // Simulate Trend logic across 12 months using the adjustment scale
+        if (trendChart) {
+            const baseMonthAvg = data.base_units;
+            const varianceRatio = data.adjusted_units / (data.base_units || 1);
+            
+            const simulatedBase = Array(12).fill(0).map((_, i) => {
+                const seasonFactor = 1 + (0.2 * Math.sin((i / 11) * Math.PI * 2)); 
+                return baseMonthAvg * seasonFactor;
+            });
+            
+            const simulatedAdj = simulatedBase.map(b => b * varianceRatio);
+            
+            trendChart.data.datasets[0].data = simulatedBase;
+            trendChart.data.datasets[1].data = simulatedAdj;
+            trendChart.update();
+        }
+
         const tipRes = await fetch(`${API_URL}/tips`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -198,4 +315,4 @@ calcBtn.addEventListener("click", async () => {
     }
 });
 
-initChart();
+initCharts();
