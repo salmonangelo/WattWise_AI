@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from backend.schemas import PredictRequest, PredictResponse, TipsRequest, TipsResponse
 from backend.services import calculator, tariff, co2, ml_model, tips
 import logging
@@ -54,3 +55,6 @@ def predict_energy(request: PredictRequest):
 def get_tips(request: TipsRequest):
     suggestions = tips.generate_tips(request.appliances)
     return TipsResponse(tips=suggestions)
+
+# Mount the static frontend directory AFTER APIs
+app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
